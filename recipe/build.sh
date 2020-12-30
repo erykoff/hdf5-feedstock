@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 # Get an updated config.sub and config.guess
@@ -52,6 +51,7 @@ if [[ "$CONDA_BUILD_CROSS_COMPILATION" == 1 && $target_platform == "osx-arm64" ]
   export PAC_FORTRAN_NUM_INTEGER_KINDS="5"
   export PAC_FC_ALL_REAL_KINDS_SIZEOF="{4,8}"
   export PAC_FC_ALL_INTEGER_KINDS_SIZEOF="{1,2,4,8,16}"
+  export hdf5_disable_tests="--enable-tests=no"
 fi
 
 ./configure --prefix="${PREFIX}" \
@@ -69,7 +69,8 @@ fi
             --enable-unsupported \
             --enable-using-memchecker \
             --enable-static=yes \
-            --enable-ros3-vfd
+            --enable-ros3-vfd \
+	    ${hdf5_disable_tests}
 
 # allow oversubscribing with openmpi in make check
 export OMPI_MCA_rmaps_base_oversubscribe=yes
@@ -83,10 +84,16 @@ if [[ "$CONDA_BUILD_CROSS_COMPILATION" == 1 ]]; then
     $CC_FOR_BUILD ../../src/H5detect.c -I ../../src/ -o H5detect
     $CC_FOR_BUILD ../../src/H5make_libsettings.c -I ../../src/ -o H5make_libsettings
     $CC_FOR_BUILD ../../fortran/src/H5match_types.c -I ../../src/ -o H5match_types
-    $FC_FOR_BUILD ../../fortran/src/H5_buildiface.F90 -I ../../fortran/src/ $LDFLAGS -o H5_buildiface
+    # When building on osx-64 fortran is confused by 11.0
+    if [[ "$build_platform" == "osx-64" ]]; then
+      export MACOSX_DEPLOYMENT_TARGET=10.15
+    fi
+    $FC_FOR_BUILD ../../fortran/src/H5_buildiface.F90 -I ../../fortran/src/ -L $BUILD_PREFIX/lib -o H5_buildiface
+    $FC_FOR_BUILD ../../hl/fortran/src/H5HL_buildiface.F90 -I ../../hl/fortran/src -I ../../fortran/src -L $BUILD_PREFIX/lib -o H5HL_buildiface
 
     popd
   )
+  export PATH=`pwd`/native-build/bin:$PATH
 fi
 
 if [[ "$CI" != "travis" ]]; then

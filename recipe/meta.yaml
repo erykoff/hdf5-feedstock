@@ -55,9 +55,10 @@ source:
     # Disable shared Fortran API building on OSX
     - patches/osx_configure.patch  # [osx]
     # Enable cross-compiling on osx
-    - patches/osx-arm64_cross_configure.patch  # [osx and build_platform != target_platform]
-    - patches/osx-arm64_cross_src_makefile.patch  # [osx and build_platform != target_platform]
-    - patches/osx-arm64_cross_fortran_src_makefile.patch  # [osx and build_platform != target_platform]
+    - patches/osx_cross_configure.patch  # [osx and build_platform != target_platform]
+    - patches/osx_cross_src_makefile.patch  # [osx and build_platform != target_platform]
+    - patches/osx_cross_fortran_src_makefile.patch  # [osx and build_platform != target_platform]
+    - patches/osx_cross_hl_fortran_src_makefile.patch  # [osx and build_platform != target_platform]
 
 
 build:
@@ -75,6 +76,8 @@ requirements:
     - make      # [unix]
     - libtool   # [unix]
     - ninja                      # [win]
+    - {{ mpi }}  # [build_platform != target_platform and mpi != 'nompi']
+    - libgfortran-devel_osx-64  # [build_platform != target_platform and build_platform == 'osx-64']
   host:
     - {{ mpi }}  # [mpi != 'nompi']
     - zlib
@@ -105,7 +108,6 @@ outputs:
         - libtool                    # [not win]
         - make                       # [not win]
         - ninja                      # [win]
-        - {{ mpi }}  # [build_platform != target_platform and mpi != 'nompi']
       host:
         - {{ mpi }}  # [mpi != 'nompi']
         - zlib
