@@ -64,6 +64,7 @@ source:
 build:
   number: {{ build }}
   skip: True  # [win and vc<14]
+  skip: true  # [osx and arm64 and hdf5_version == "1.10.5"]
   string: "{{ mpi_prefix }}_h{{ PKG_HASH }}_{{ build }}"
 
 requirements:
@@ -108,6 +109,7 @@ outputs:
         - libtool                    # [not win]
         - make                       # [not win]
         - ninja                      # [win]
+        - {{ mpi }}  # [build_platform != target_platform and mpi != 'nompi']
       host:
         - {{ mpi }}  # [mpi != 'nompi']
         - zlib
